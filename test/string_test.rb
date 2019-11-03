@@ -8,7 +8,7 @@ class StringTest < Minitest::Test
   end
 
   def test_to_regexp
-    assert_equal /^[0-9A-Za-z]+$/, '^[0-9A-Za-z]+$'.to_regexp
-    assert_equal /^[0-9A-Za-z]+$/, '^[0-9A-Za-z]+$'.to_re
+    assert_equal(/^[0-9A-Za-z]+$/, '^[0-9A-Za-z]+$'.to_regexp)
+    assert_equal(/^[0-9A-Za-z]+$/, '^[0-9A-Za-z]+$'.to_re)
   end
 end
