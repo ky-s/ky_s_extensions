@@ -1,6 +1,6 @@
 require "test_helper"
 
-class HashTest < Minitest::Test
+class HashRequiredkeysTest < Minitest::Test
   def setup
     @hsh = { :foo => 3, 'bar' => 4, ['baz'] => 5, nil => false, false => nil }
   end

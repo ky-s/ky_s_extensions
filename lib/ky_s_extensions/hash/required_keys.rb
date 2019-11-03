@@ -6,6 +6,7 @@ class Hash
 
   # if any required key is missing, throw ArgumentError.
   # otherwise call Hash:slice.
+  #
   # { 'key1' => 1, 'key2' => 2, 'key3' => 3 }.slice_required('key1', 'key2')
   # # =>{ 'key1' => 1, 'key2' => 2 }
   #
@@ -14,6 +15,7 @@ class Hash
   def slice_required(*required_keys)
     has_all_keys?(*required_keys) or
       raise ArgumentError, "required key: #{(required_keys - keys).join(',')} was not present."
+
     slice(*required_keys)
   end
 
@@ -21,6 +23,7 @@ class Hash
   # それらのセットごとに、含まれるキーをすべて持っているか検証します。
   # いずれのキーセットも満たすことができなければ ArgumentError を投げます。
   # そうでなければ、最初に満たしたキーセットで slice した結果を返します。
+  #
   # { 'key1' => 1, 'key2' => 2, 'key3 => 3 }.slice_required_key_set(:key1, ['key2', 'key3'])
   # # => { 'key2' => 2, 'key3 => 3 }
   #
@@ -35,6 +38,7 @@ class Hash
     unless valid_set
       raise ArgumentError, "required key sets: #{required_sets.inspect} were not any present."
     end
+
     slice(*valid_set)
   end
 end

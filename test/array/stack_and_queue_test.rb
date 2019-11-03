@@ -1,6 +1,6 @@
 require "test_helper"
 
-class StackAndQueueTest < Minitest::Test
+class ArrayStackAndQueueTest < Minitest::Test
   def test_unshift!
     arr = [1, 2, 3]
     arr.unshift!(4, 5)
