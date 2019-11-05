@@ -1,63 +1,79 @@
 require "test_helper"
 
 class ModuleInstallMethodsFromTest < Minitest::Test
-  class FakeArray  < Array;  end
-  class FakeString < String; end
-  class FakeHash   < Hash;   end
+  require "module/stubs"
 
-  class FakeRange < Range
-    install_methods_from FakeArray,  :to_arr
-    install_methods_from FakeString, :to_str,  methods: :succ
-    install_methods_from FakeHash,   :to_hash, methods: [:keys, :has_key?], follow: true
+  class ::Ditto < Pokemon # メタモン
+    install_methods_from Pikachu,    :transform
+    install_methods_from Clefairy,   :transform, Clefairy,  methods: :tackle
+    install_methods_from Togepi,     :transform, Togepi,    methods: :metronome, follow: true
+    install_method_from  Tyrogue,    :transform, Tyrogue,   method: :rock_smash, callback: -> (res) { res + '！！' }
+    install_method_from  Charizard,  :transform, Charizard, method: :fly
 
-    def to_arr
-      FakeArray.new(to_a)
-    end
-
-    def to_str
-      FakeString.new(to_a[-1].to_s)
-    end
-
-    def to_hash
-      FakeHash.new.tap { |h| h[:key] = self }
+    def transform(klass = Pikachu)
+      klass.new(@name)
     end
   end
 
-  class FakeArray < Array
-    def new_method_arr # FakeRange is following
-      'new method_arr'
+  # add method after installed
+  class ::Pikachu < Pokemon
+    def thunder
+      fight('かみなり')
     end
   end
 
-  class FakeString < String
-    def new_method_str # FakeRange is not folloing
-      'new method_str'
+  class ::Clefairy < Pokemon
+    def barrier
+      fight('バリアー')
     end
   end
 
-  class FakeHash < Hash
-    def new_method_hash # FakeRange is following
-      'new method_hash'
+  class ::Togepi < Pokemon
+    def attract
+      fight('メロメロ')
     end
   end
 
-  def test_install_methods_from_fake_array
-    assert_includes FakeRange.instance_methods, :[]
-    assert_includes FakeRange.instance_methods, :new_method_arr
-    assert_equal 100,   FakeRange.new(1, 100)[-1]
+  class ::Tyrogue < Pokemon
+    def mega_kick
+      fight('メガトンキック')
+    end
   end
 
-  def test_install_methods_from_fake_string
-    assert_includes FakeRange.instance_methods, :succ
-    refute FakeRange.instance_methods.include?(:new_method_str)
-    assert_equal '101', FakeRange.new(1, 100).succ
+  class ::Charizard < Pokemon
+    def fire_blast
+      fight('だいもんじ')
+    end
   end
 
-  def test_install_methods_from_fake_hash
-    assert_includes FakeRange.instance_methods, :keys
-    assert_includes FakeRange.instance_methods, :has_key?
-    assert_includes FakeRange.instance_methods, :new_method_hash
-    assert_equal [:key], FakeRange.new(1, 100).keys
-    assert FakeRange.new(1, 100).has_key?(:key)
+  def test_install_methods_from_pikachu
+    assert_includes Ditto.instance_methods, :thunderbolt
+    assert_includes Ditto.instance_methods, :double_team
+    assert_includes Ditto.instance_methods, :thunder
+  end
+
+  def test_install_methods_from_clefairy
+    assert_includes Ditto.instance_methods, :tackle
+    refute Ditto.instance_methods.include?(:double_slap)
+    refute Ditto.instance_methods.include?(:barrier)
+  end
+
+  def test_install_methods_from_togepi
+    assert_includes Ditto.instance_methods, :metronome
+    refute Ditto.instance_methods.include?(:encore)
+    assert_includes Ditto.instance_methods, :attract
+  end
+
+  def test_install_method_from_tyrogue
+    assert_includes Ditto.instance_methods, :rock_smash
+    refute Ditto.instance_methods.include?(:rapid_spin)
+    refute Ditto.instance_methods.include?(:mega_kick)
+    assert_match(/！！！$/, Ditto.new('メタモン').rock_smash)
+  end
+
+  def test_install_method_from_charizard
+    assert_includes Ditto.instance_methods, :fly
+    refute Ditto.instance_methods.include?(:flamethrower)
+    refute Ditto.instance_methods.include?(:fire_blast)
   end
 end

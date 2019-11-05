@@ -13,6 +13,7 @@ class Module
   # methods         ... インストールする対象メソッド (default: 全インスタンスメソッド)
   # follow          ... 今後追加したメソッドに追随するか。
   #                     default は、 methods が明示的に渡されたら false 、なければ true です。
+  # callback        ... 処理後に実行するコールバックメソッド (Proc も可)
   # e.g.
   # class RangeArray < Range
   #   install_methods_from Array, :to_a
@@ -24,12 +25,9 @@ class Module
   # RangeArray.new(1, 100).succ
   # # => "1..101"
   #
-  def install_methods_from(klass, converter, *converter_args, methods: nil, follow: methods.nil?)
+  def install_methods_from(klass, converter, *converter_args, methods: nil, follow: methods.nil?, callback: nil)
     (Array(methods || klass.instance_methods) - self.instance_methods).each do |method|
-      define_method method do |*args|
-        send(converter, *converter_args).send(method, *args)
-      end
-      # puts "#{self}:#{method} installed from #{klass}."
+      install_method_from(klass, converter, *converter_args, method: method, callback: callback)
     end
 
     if follow
@@ -38,15 +36,33 @@ class Module
       klass.singleton_class.prepend(
         Module.new do
           define_method :method_added do |method|
-            install_class.define_method method do |*args|
-              send(converter, *converter_args).send(method, *args)
-            end
-
+            install_class.install_method_from(klass, converter, *converter_args, method: method, callback: callback)
             super(method)
           end
         end
       )
     end
   end
-end
 
+  # install only one method
+  # こちらのほうが安全
+  # klass           ... インストール元クラスオブジェクト
+  # converter       ... 現在のオブジェクトを klass オブジェクトに変換するメソッド
+  # converter_args  ... converter の引数オプション
+  # methods         ... インストールする対象メソッド (default: 全インスタンスメソッド)
+  # callback        ... 処理後に実行するコールバックメソッド (Proc も可)
+  def install_method_from(klass, converter, *converter_args, method: , callback: nil)
+    define_method method do |*args|
+      result = send(converter, *converter_args).send(method, *args)
+
+      if callback.is_a?(Proc)
+        callback.call result
+      elsif callback.is_a?(Symbol) || callback.is_a?(String)
+        result.send(callback)
+      else
+        result
+      end
+    end
+    # puts "#{self}:#{method} installed from #{klass}."
+  end
+end
